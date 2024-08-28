@@ -20,11 +20,6 @@ def keywords():
     pass
 
 
-import requests
-import pandas as pd
-from datetime import datetime, timedelta
-from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-
 def summarize(input_text, source_ids):
     url = "https://newsapi.org/v2/everything"
     params = {
@@ -52,6 +47,8 @@ def summarize(input_text, source_ids):
         
         # Rename the columns to desired names
         df.rename(columns={'publishedAt': 'date', 'source.name': 'news source', 'url': 'link'}, inplace=True)
+
+        df.sort_values(by='date', ascending=False, inplace=True)
         
         # Extract the content for summarization
         articles_content = " ".join(df['content'].dropna())
@@ -70,10 +67,10 @@ def summarize(input_text, source_ids):
         
         # Include the top 3 articles
         top_articles = df.head(3)[['title', 'link']].to_dict(orient='records')
-        articles_str = "\n".join([f"Title: {article['title']}\nLink: {article['link']}" for article in top_articles])
+        articles_str = "\n".join([f"<a href='{article['link']}'>{article['title']}</a>" for article in top_articles])
         
         # Combine summary and top articles
-        final_summary = f"{summary}\n\nTop 3 articles used:\n{articles_str}"
+        final_summary = f"{summary}\n\nArticles:\n{articles_str}"
         
         return final_summary
     
@@ -81,7 +78,6 @@ def summarize(input_text, source_ids):
         return f"Failed to retrieve data: {response.status_code}"
 
 def process_text(text, nlp):
-    text = re.sub(r'\r\n|\r|\n', ' ', text).lower()
     doc = nlp(text.lower())  # Convert text to lowercase and process with spaCy
     tokens = [token.text for token in doc if not token.is_stop and not token.is_punct]  # get rid of stopwords
     # TODO set names as one word

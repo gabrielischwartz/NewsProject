@@ -62,7 +62,7 @@
     {% if summary %}
         <div class="mt-4">
             <h2>Summary</h2>
-            <p>{{ summary }}</p>
+            <div>{{ summary | safe }}</div>
         </div>
     {% endif %}
 </div>
